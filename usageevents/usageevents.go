@@ -22,8 +22,6 @@ import (
 	"sync"
 	"time"
 	"github.com/cloudfoundry/sonde-go/events"
-	"strings"
-	"strconv"
 	"app-metrics-nozzle/domain"
 	"os"
 	"log"
@@ -57,8 +55,6 @@ var mutex sync.Mutex
 var logger = log.New(os.Stdout, "", 0)
 
 var AppDetails = make(map[string]domain.App)
-var OrganizationUsers = make(map[string][]cfclient.User)
-var SpacesUsers = make(map[string][]cfclient.User)
 var Orgs []cfclient.Org
 var Spaces []cfclient.Space
 var AppDbCache CachedApp
@@ -87,95 +83,12 @@ func ProcessEvent(msg *events.Envelope) {
 			event.AnnotateWithAppData()
 			updateAppDetails(event)
 		}
-
-		if event.SourceType == "APP" {
-			event.AnnotateWithAppData()
-			updateAppWithAppEvent(event)
-		}
-	}
-
-	if eventType == events.Envelope_ContainerMetric {
-		event = ContainerMetric(msg)
-		event.AnnotateWithAppData()
-		updateAppWithContainerMetrics(event)
 	}
 }
-
-func ContainerMetric(msg *events.Envelope) Event {
-	message := msg.GetContainerMetric()
-
-	return Event{
-		Origin:         msg.GetOrigin(),
-		Type:           msg.GetEventType().String(),
-		AppID:          message.GetApplicationId(),
-		CellIP:                *msg.Ip,
-		InstanceIndex:  message.GetInstanceIndex(),
-		CPUPercentage:  message.GetCpuPercentage(),
-		MemBytes:       message.GetMemoryBytes(),
-		DiskBytes:      message.GetDiskBytes(),
-	}
-}
-
-
 
 // GetMapKeyFromAppData converts the combo of an app, space, and org into a hashmap key
 func GetMapKeyFromAppData(orgName string, spaceName string, appName string) string {
 	return fmt.Sprintf("%s/%s/%s", orgName, spaceName, appName)
-}
-
-func updateAppWithAppEvent(event Event)  {
-	appName := event.AppName
-	appOrg := event.OrgName
-	appSpace := event.SpaceName
-
-	appKey := GetMapKeyFromAppData(appOrg, appSpace, appName)
-	appDetail := AppDetails[appKey]
-
-	gcStatsMarker := "[GC"
-	if strings.Contains(event.Msg, gcStatsMarker) {
-		i, _ := strconv.ParseInt(event.SourceInstance, 10, 32)
-		appDetail.Instances[i].GcStats = event.Msg
-		logger.Println("Setting GC for app " + appKey)
-	}
-
-	AppDetails[appKey] = appDetail
-	//logger.Println("Updated with App event " + appKey)
-
-}
-
-func updateAppWithContainerMetrics(event Event) {
-
-	appName := event.AppName
-	appOrg := event.OrgName
-	appSpace := event.SpaceName
-
-	appKey := GetMapKeyFromAppData(appOrg, appSpace, appName)
-	appDetail := AppDetails[appKey]
-
-	var totalCPU float64 = 0
-	var totalDiskUsage uint64 = 0
-	var totalMemoryUsage uint64 = 0
-
-	if 0 < len(appDetail.Instances) {
-
-		appDetail.Instances[event.InstanceIndex].CellIP = event.CellIP
-		appDetail.Instances[event.InstanceIndex].CPUUsage = event.CPUPercentage
-		appDetail.Instances[event.InstanceIndex].MemoryUsage = event.MemBytes
-		appDetail.Instances[event.InstanceIndex].DiskUsage = event.DiskBytes
-
-		for i := 0; i < len(appDetail.Instances); i++ {
-			totalCPU = totalCPU + event.CPUPercentage
-			totalDiskUsage = totalDiskUsage + event.DiskBytes
-			totalMemoryUsage = totalMemoryUsage + event.MemBytes
-		}
-	}
-
-	appDetail.EnvironmentSummary.TotalCPU = totalCPU
-	appDetail.EnvironmentSummary.TotalDiskUsage = totalDiskUsage
-	appDetail.EnvironmentSummary.TotalMemoryUsage = totalMemoryUsage
-
-	AppDetails[appKey] = appDetail
-	//logger.Println("Updated with Container metrics " + appKey)
 }
 
 func updateAppDetails(event Event) {

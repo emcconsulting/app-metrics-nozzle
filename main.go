@@ -133,18 +133,7 @@ func main() {
 
 func reloadEnvDetails() {
 	usageevents.Orgs = api.OrgsDetailsFromCloudController()
-
-	for idx := range usageevents.Orgs {
-		users := api.UsersForOrganization(usageevents.Orgs[idx].Guid)
-		usageevents.OrganizationUsers[usageevents.Orgs[idx].Name] = users
-	}
-
 	usageevents.Spaces = api.SpacesDetailsFromCloudController()
-
-	for idx := range usageevents.Spaces {
-		users := api.UsersForSpace(usageevents.Spaces[idx].Guid)
-		usageevents.SpacesUsers[usageevents.Spaces[idx].Name] = users
-	}
 }
 
 
