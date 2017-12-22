@@ -7,11 +7,10 @@ applications:
   command: app-metrics-nozzle
   buildpack: https://github.com/cloudfoundry/go-buildpack.git
 env:
-  GOVERSION: go1.6
   GOPACKAGENAME: app-metrics-nozzle
   API_ENDPOINT: https://api.local.pcfdev.io
   DOPPLER_ENDPOINT: wss://doppler.local.pcfdev.io:443
-  FIREHOSE_USER: xxxxx
-  FIREHOSE_PASSWORD: xxxxx
+  FIREHOSE_USER: admin
+  FIREHOSE_PASSWORD: admin
   SKIP_SSL_VALIDATION: true
-  CF_PULL_TIME: 300s
+  CF_PULL_TIME: 86400s

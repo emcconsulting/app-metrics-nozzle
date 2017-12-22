@@ -24,7 +24,6 @@ import (
 	"github.com/unrolled/render"
 	"strings"
 	"app-metrics-nozzle/domain"
-	"strconv"
 )
 
 func appAllHandler(formatter *render.Render) http.HandlerFunc {
@@ -78,35 +77,6 @@ func searchApps(searchKey string, w http.ResponseWriter, formatter *render.Rende
 		formatter.JSON(w, http.StatusNotFound, "No such app")
 	}
 }
-
-//New deep structure with all application details
-func appInstanceHandler(formatter *render.Render) http.HandlerFunc {
-	return func(w http.ResponseWriter, req *http.Request) {
-		w.Header().Add("Access-Control-Allow-Origin", req.Header.Get("Origin"))
-		w.Header().Add("Access-Control-Allow-Methods", "GET")
-
-		vars := mux.Vars(req)
-		instanceIndex := vars["instance_id"]
-		app := vars["app"]
-		org := vars["org"]
-		space := vars["space"]
-		key := usageevents.GetMapKeyFromAppData(org, space, app)
-		stat, exists := usageevents.AppDetails[key]
-
-		if !exists {
-			formatter.JSON(w, http.StatusNotFound, "No such app")
-		}
-
-		instanceIdx, _ := strconv.ParseInt(instanceIndex, 10, 64)
-
-		if 0 <= instanceIdx && instanceIdx < int64(len(stat.Instances))  {
-			formatter.JSON(w, http.StatusOK, stat.Instances[instanceIdx])
-		} else {
-			formatter.JSON(w, http.StatusNotFound, "No such instance")
-		}
-	}
-}
-
 
 //New deep structure with all application details
 func appHandler(formatter *render.Render) http.HandlerFunc {

@@ -39,19 +39,12 @@ func NewServer() *negroni.Negroni {
 }
 
 func initRoutes(mx *mux.Router, formatter *render.Render) {
-	mx.HandleFunc("/api/apps/{org}/{space}/{app}/{instance_id}", appInstanceHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/api/apps/{org}/{space}/{app}", appHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/api/apps/{org}/{space}", appSpaceHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/api/apps/{org}", appOrgHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/api/apps", appAllHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/api/orgs/{org}", orgDetailsHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/api/orgs", orgsHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/orgs/{org}/users", orgsUsersHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/orgs/{org}/{role}/users", orgsUsersByRoleHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/api/spaces/{space}", spaceDetailsHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/spaces/{space}/users", spacesUsersHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/spaces/{space}/{role}/users", spacesUsersByRoleHandler(formatter)).Methods("GET")
 	mx.HandleFunc("/api/spaces", spaceHandler(formatter)).Methods("GET")
-
-
 }
