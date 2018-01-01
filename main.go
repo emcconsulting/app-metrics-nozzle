@@ -46,6 +46,7 @@ var (
 	skipSSLValidation = kingpin.Flag("skip-ssl-validation", "Please don't").Default("false").OverrideDefaultFromEnvar("SKIP_SSL_VALIDATION").Bool()
 	boltDatabasePath = kingpin.Flag("boltdb-path", "Bolt Database path ").Default("my.db").OverrideDefaultFromEnvar("BOLTDB_PATH").String()
 	tickerTime = kingpin.Flag("cc-pull-time", "CloudController Polling time in sec").Default("60s").OverrideDefaultFromEnvar("CF_PULL_TIME").Duration()
+	emailFrequency = kingpin.Flag("email-frequency-in-minutes", "How frequent report needs to be sent in minutes. ie. XXm").Default("24h").OverrideDefaultFromEnvar("EMAIL_FREQUENCY_IN_HOURS").Duration()
 )
 
 const (
@@ -120,6 +121,21 @@ func main() {
 		}
 	}()
 
+	// Report generation via email every X seconds
+	reportGeneration := time.NewTicker(*emailFrequency)
+	
+	go func() {
+		for range reportGeneration.C {
+			now := time.Now()
+			logger.Print("Report generation triggered ---> " + now.Format(time.RFC3339))
+			reportData := service.GenerateReport()
+			err := service.SendReport(reportData)
+			if err != nil {
+				logger.Println(err)
+			}
+		}
+	}()
+	
 	token, _ := cfClient.GetToken()
 
 	firehose := firehose.CreateFirehoseChan(cfClient.Endpoint.DopplerEndpoint, token, *subscriptionID, *skipSSLValidation, consumer.KeepAlive)
@@ -135,5 +151,3 @@ func reloadEnvDetails() {
 	usageevents.Orgs = api.OrgsDetailsFromCloudController()
 	usageevents.Spaces = api.SpacesDetailsFromCloudController()
 }
-
-

@@ -21,6 +21,9 @@ func ReloadApps(cachedApps []caching.App) {
 
 		appDetail := domain.App{GUID:appId, Name:name}
 		api.AnnotateWithCloudControllerData(&appDetail)
+		
+		appDetail.LastEventTime = AppDetails[key].LastEventTime
+		
 		AppDetails[key] = appDetail
 		logger.Println(fmt.Sprintf("Registered [%s]", key))
 	}

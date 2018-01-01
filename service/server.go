@@ -20,6 +20,12 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
+	// TODO: this import needs to point to github. fix using glide.yaml file
+	"app-metrics-nozzle/restgate"
+	//"github.com/pjebs/restgate"
+	
+	"github.com/gorilla/context"
+	"net/http"
 )
 
 // NewServer configures and returns a Server.
@@ -39,12 +45,38 @@ func NewServer() *negroni.Negroni {
 }
 
 func initRoutes(mx *mux.Router, formatter *render.Render) {
-	mx.HandleFunc("/api/apps/{org}/{space}/{app}", appHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/apps/{org}/{space}", appSpaceHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/apps/{org}", appOrgHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/apps", appAllHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/orgs/{org}", orgDetailsHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/orgs", orgsHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/spaces/{space}", spaceDetailsHandler(formatter)).Methods("GET")
-	mx.HandleFunc("/api/spaces", spaceHandler(formatter)).Methods("GET")
+	//Create subrouters
+	secureRouter := mux.NewRouter()
+	secureRouter.HandleFunc("/api/apps/{org}/{space}/{app}", appHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/apps/{org}/{space}", appSpaceHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/apps/{org}", appOrgHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/apps", appAllHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/orgs/{org}", orgDetailsHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/orgs", orgsHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/spaces/{space}", spaceDetailsHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/spaces", spaceHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/report/email", generateReportHandler(formatter)).Methods("GET")
+	
+	//Secure the endpoints
+	negRest := negroni.New()
+	negRest.Use(restgate.New("X-Auth-Key", "X-Auth-Secret", restgate.Static, restgate.Config{Context: C, Key: []string{"12345"}, Secret: []string{"secret"}, HTTPSProtectionOff: true}))
+	negRest.UseHandler(secureRouter)
+
+	// Add subrouter to main route
+	// These endpoints are protected by RestGate via hardcoded KEYs
+	mx.Handle("/api/apps/{org}/{space}/{app}", negRest)
+	mx.Handle("/api/apps/{org}/{space}", negRest)
+	mx.Handle("/api/apps/{org}", negRest)
+	mx.Handle("/api/apps", negRest)
+	mx.Handle("/api/orgs/{org}", negRest)
+	mx.Handle("/api/orgs", negRest)
+	mx.Handle("/api/spaces/{space}", negRest)
+	mx.Handle("/api/spaces", negRest)
+	mx.Handle("/api/report/email", negRest)
+}
+
+//Optional Context - If not required, remove 'Context: C' or alternatively pass nil (see above)
+//NB: Endpoint handler can determine the key used to authenticate via: context.Get(r, 0).(string)
+func C(r *http.Request, authenticatedKey string) {
+	context.Set(r, 0, authenticatedKey) // Read http://www.gorillatoolkit.org/pkg/context about setting arbitary context key
 }

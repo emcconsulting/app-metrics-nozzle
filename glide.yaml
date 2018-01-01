@@ -14,9 +14,12 @@ import:
   - events
 - package: github.com/codegangsta/negroni
 - package: github.com/gorilla/mux
+- package: github.com/gorilla/context
 - package: github.com/cloudfoundry-community/go-cfclient
   version: 96e98d520e516cfa2edc38e924ab41b36b0120a3
   repo: https://github.com/jtgammon/go-cfclient.git
   vcs: git
 - package: github.com/unrolled/render
 - package: gopkg.in/alecthomas/kingpin.v2
+- package: github.com/scorredoira/email
+- package: github.com/pjebs/restgate

@@ -5,7 +5,7 @@ applications:
   name: app-metrics-nozzle
   disk_quota: 1024M
   command: app-metrics-nozzle
-  buildpack: https://github.com/cloudfoundry/go-buildpack.git
+  #buildpack: https://github.com/cloudfoundry/go-buildpack.git
 env:
   GOPACKAGENAME: app-metrics-nozzle
   API_ENDPOINT: https://api.local.pcfdev.io
@@ -14,3 +14,14 @@ env:
   FIREHOSE_PASSWORD: admin
   SKIP_SSL_VALIDATION: true
   CF_PULL_TIME: 86400s
+  EMAIL_SUBJECT: Report
+  EMAIL_BODY: Please find attachment for the report.
+  EMAIL_SENDER: Santhosh Kumar
+  EMAIL_RECEIVER: santhosh.kumar2@emc.com
+  EMAIL_SERVER_HOST: smtp.gmail.com
+  EMAIL_SERVER_PORT: 587
+  EMAIL_ATTACHMENT_NAME: Report.csv
+  EMAIL_USER_NAME: <gmail_account_username>
+  EMAIL_USER_PASSWORD: <gmail_account_password>
+  EMAIL_FREQUENCY_IN_HOURS: 24h
+  REPORT_TIME_ZONE: Australia/Sydney
