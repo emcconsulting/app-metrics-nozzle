@@ -26,6 +26,7 @@ import (
 	"os"
 	"log"
 	"github.com/cloudfoundry-community/go-cfclient"
+	"app-metrics-nozzle/redis"
 )
 
 // Event is a struct represented an event augmented/decorated with corresponding app/space/org data.
@@ -108,13 +109,9 @@ func updateAppDetails(event Event) {
 
 	appDetail.EventCount++
 	appDetail.LastEventTime = time.Now().UnixNano()
+	// Update redis cache with new LastEventTime
+	redis.Set(appKey, appDetail.LastEventTime)
 
-	eventElapsed := time.Now().UnixNano() - appDetail.LastEventTime
-	appDetail.ElapsedSinceLastEvent = eventElapsed / 1000000000
-	totalElapsed := time.Now().UnixNano() - feedStarted
-	elapsedSeconds := totalElapsed / 1000000000
-	appDetail.RequestsPerSecond = float64(appDetail.EventCount) / float64(elapsedSeconds)
-	appDetail.ElapsedSinceLastEvent = eventElapsed / 1000000000
 	AppDetails[appKey] = appDetail
 	//spew.Dump(AppDetails[appKey])
 

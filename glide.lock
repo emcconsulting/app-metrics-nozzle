@@ -90,4 +90,13 @@ imports:
   - internal/remote_api
 - name: gopkg.in/alecthomas/kingpin.v2
   version: 8cccfa8eb2e3183254457fb1749b2667fbc364c7
+- name: github.com/garyburd/redigo
+  version: d1ed5c67e5794de818ea85e6b522fda02623a484
+  subpackages:
+  - redis
+  - internal
+- name: github.com/scorredoira/email
+  version: ce6dfab97c7ac801aa09ab6f3275f4534f25734b
+- name: github.com/pjebs/jsonerror
+  version: 7cbf8512c7fb42f74edafc0d340acee765facc62
 devImports: []

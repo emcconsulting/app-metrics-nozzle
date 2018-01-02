@@ -22,4 +22,7 @@ import:
 - package: github.com/unrolled/render
 - package: gopkg.in/alecthomas/kingpin.v2
 - package: github.com/scorredoira/email
-- package: github.com/pjebs/restgate
+- package: github.com/garyburd/redigo
+  subpackages:
+  - redis
+- package: github.com/pjebs/jsonerror

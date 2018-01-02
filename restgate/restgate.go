@@ -25,12 +25,7 @@ import (
 	"os"
 	"strings"
 
-	// TODO: this import needs to point to github. fix using glide.yaml file 
-	e "app-metrics-nozzle/jsonerror"
-	//e "github.com/pjebs/jsonerror"
-	
-	// TODO: this import needs to point to gopkg. fix using glide.yaml file
-	//"gopkg.in/unrolled/render"
+	e "github.com/pjebs/jsonerror"
 	"github.com/unrolled/render"
 )
 

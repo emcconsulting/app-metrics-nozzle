@@ -25,3 +25,7 @@ env:
   EMAIL_USER_PASSWORD: <gmail_account_password>
   EMAIL_FREQUENCY_IN_HOURS: 24h
   REPORT_TIME_ZONE: Australia/Sydney
+  REDIS_HOST: redis-broker.local.pcfdev.io
+  REDIS_PORT: 46436
+  REDIS_PASSWORD: 25707e6b-2223-4bb1-bd2e-839454ae6110
+  REDIS_MAX_CONN: 20

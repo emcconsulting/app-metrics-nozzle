@@ -20,9 +20,8 @@ import (
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
 	"github.com/unrolled/render"
-	// TODO: this import needs to point to github. fix using glide.yaml file
+	// As original source of restgate doesn't resolve "gopkg.in/unrolled/render.v1" dependency, the resource is maintained locally.
 	"app-metrics-nozzle/restgate"
-	//"github.com/pjebs/restgate"
 	
 	"github.com/gorilla/context"
 	"net/http"
@@ -55,7 +54,9 @@ func initRoutes(mx *mux.Router, formatter *render.Render) {
 	secureRouter.HandleFunc("/api/orgs", orgsHandler(formatter)).Methods("GET")
 	secureRouter.HandleFunc("/api/spaces/{space}", spaceDetailsHandler(formatter)).Methods("GET")
 	secureRouter.HandleFunc("/api/spaces", spaceHandler(formatter)).Methods("GET")
-	secureRouter.HandleFunc("/api/report/email", generateReportHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/report/email", generateAllReportHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/report/email/{org}", generateOrgReportHandler(formatter)).Methods("GET")
+	secureRouter.HandleFunc("/api/report/email/{org}/{space}", generateSpaceReportHandler(formatter)).Methods("GET")
 	
 	//Secure the endpoints
 	negRest := negroni.New()
@@ -73,6 +74,8 @@ func initRoutes(mx *mux.Router, formatter *render.Render) {
 	mx.Handle("/api/spaces/{space}", negRest)
 	mx.Handle("/api/spaces", negRest)
 	mx.Handle("/api/report/email", negRest)
+	mx.Handle("/api/report/email/{org}", negRest)
+	mx.Handle("/api/report/email/{org}/{space}", negRest)
 }
 
 //Optional Context - If not required, remove 'Context: C' or alternatively pass nil (see above)

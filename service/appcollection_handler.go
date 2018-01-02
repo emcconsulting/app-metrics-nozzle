@@ -32,9 +32,7 @@ import (
 	"net/mail"
 	"encoding/csv"
 	"bytes"
-	// TODO: this import needs to point to github. fix using glide.yaml file
-	"app-metrics-nozzle/email"
-	//github.com/scorredoira/email
+	"github.com/scorredoira/email"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -49,8 +47,6 @@ var(
 	emailUserName = kingpin.Flag("email-user-name", "Report sender's email address.").Default("admin@email.com").OverrideDefaultFromEnvar("EMAIL_USER_NAME").String()
 	emailUserPassword = kingpin.Flag("email-user-password", "Report sender's email account password.").Default("password").OverrideDefaultFromEnvar("EMAIL_USER_PASSWORD").String()
 	reportTimeZone = kingpin.Flag("report-time-zone", "Time zone of the report").Default("Australia/Sydney").OverrideDefaultFromEnvar("REPORT_TIME_ZONE").String()
-	
-	timeZoneLocation time.Location
 )
 
 var logger = log.New(os.Stdout, "", 0)
@@ -129,12 +125,51 @@ func appHandler(formatter *render.Render) http.HandlerFunc {
 	}	
 }
 
-func generateReportHandler(formatter *render.Render) http.HandlerFunc {
+func generateAllReportHandler(formatter *render.Render) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Add("Access-Control-Allow-Origin", req.Header.Get("Origin"))
 		w.Header().Add("Access-Control-Allow-Methods", "GET")
 		
-		reportData := GenerateReport()
+		reportData := GenerateReport("")
+		err := SendReport(reportData)
+		if err != nil {
+			logger.Println(err)
+		}
+		
+		formatter.JSON(w, http.StatusOK, "Report is sent to admin email account. Kindly check.")
+	}
+}
+
+func generateOrgReportHandler(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", req.Header.Get("Origin"))
+		w.Header().Add("Access-Control-Allow-Methods", "GET")
+		
+		vars := mux.Vars(req)
+		org := vars["org"]
+		searchKey := fmt.Sprintf("%s/", org)
+		
+		reportData := GenerateReport(searchKey)
+		err := SendReport(reportData)
+		if err != nil {
+			logger.Println(err)
+		}
+		
+		formatter.JSON(w, http.StatusOK, "Report is sent to admin email account. Kindly check.")
+	}
+}
+
+func generateSpaceReportHandler(formatter *render.Render) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Add("Access-Control-Allow-Origin", req.Header.Get("Origin"))
+		w.Header().Add("Access-Control-Allow-Methods", "GET")
+		
+		vars := mux.Vars(req)
+		org := vars["org"]
+		space := vars["space"]
+		searchKey := fmt.Sprintf("%s/%s/", org, space)
+		
+		reportData := GenerateReport(searchKey)
 		err := SendReport(reportData)
 		if err != nil {
 			logger.Println(err)
@@ -168,16 +203,21 @@ func SendReport(reportData []byte) error {
 }
 
 // generateReport returns the report with cache data
-func GenerateReport() []byte {
+func GenerateReport(searchKey string) []byte {
 	var rows [][]string
 	colhdrs := []string{"Org", "Space", "App Name", "Last accessed time"}
 	rows = append(rows, colhdrs)
 	
 	// get the data from each struct
-	for _, v := range usageevents.AppDetails {
+	for k, v := range usageevents.AppDetails {
 		if v.Name == "" {
-			continue;
+			continue
 		}
+		
+		if searchKey != "" && !strings.HasPrefix(k, searchKey) {
+			continue
+		}
+		
 		
         row := make([]string, 0, 4)
 
@@ -187,7 +227,6 @@ func GenerateReport() []byte {
 		
 		if v.LastEventTime > 0 {
 			// time zone for the report generation 
-			// TODO: move this timezone declaration to global.
 			timeZoneLocation, err := time.LoadLocation(*reportTimeZone)
 			if err != nil {
 				logger.Println("Error loading timezone. Falling back to server time zone:", err)

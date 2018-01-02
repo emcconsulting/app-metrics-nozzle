@@ -32,6 +32,7 @@ import (
 	"app-metrics-nozzle/service"
 	"app-metrics-nozzle/usageevents"
 	"app-metrics-nozzle/api"
+	"app-metrics-nozzle/redis"
 	"github.com/cloudfoundry-community/firehose-to-syslog/caching"
 	"github.com/cloudfoundry/noaa/consumer"
 )
@@ -97,6 +98,10 @@ func main() {
 
 	defer db.Close()
 
+	logger.Println("Initializing Redis pool")
+	redis.Init()
+	defer redis.Close()
+
 	caching.SetCfClient(cfClient)
 	caching.SetAppDb(db)
 	caching.CreateBucket()
@@ -128,7 +133,7 @@ func main() {
 		for range reportGeneration.C {
 			now := time.Now()
 			logger.Print("Report generation triggered ---> " + now.Format(time.RFC3339))
-			reportData := service.GenerateReport()
+			reportData := service.GenerateReport("")
 			err := service.SendReport(reportData)
 			if err != nil {
 				logger.Println(err)

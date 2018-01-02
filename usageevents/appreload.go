@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"app-metrics-nozzle/domain"
 	"app-metrics-nozzle/api"
+	"app-metrics-nozzle/redis"
 	"github.com/cloudfoundry-community/firehose-to-syslog/caching"
 )
 
@@ -22,7 +23,13 @@ func ReloadApps(cachedApps []caching.App) {
 		appDetail := domain.App{GUID:appId, Name:name}
 		api.AnnotateWithCloudControllerData(&appDetail)
 		
-		appDetail.LastEventTime = AppDetails[key].LastEventTime
+		if AppDetails[key].LastEventTime > 0 {
+			appDetail.LastEventTime = AppDetails[key].LastEventTime
+			// Update redis cache with new LastEventTime
+			redis.Set(key, appDetail.LastEventTime)
+		} else{	// Fetch LastEventTime from Redis cache
+			appDetail.LastEventTime = redis.Get(key)
+		}
 		
 		AppDetails[key] = appDetail
 		logger.Println(fmt.Sprintf("Registered [%s]", key))
