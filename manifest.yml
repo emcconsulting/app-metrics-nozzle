@@ -18,11 +18,11 @@ env:
   EMAIL_BODY: Please find attachment for the report.
   EMAIL_SENDER: Santhosh Kumar
   EMAIL_RECEIVER: santhosh.kumar2@emc.com
-  EMAIL_SERVER_HOST: smtp.gmail.com
+  EMAIL_SERVER_HOST: <smtp_server_host>
   EMAIL_SERVER_PORT: 587
   EMAIL_ATTACHMENT_NAME: Report.csv
-  EMAIL_USER_NAME: <gmail_account_username>
-  EMAIL_USER_PASSWORD: <gmail_account_password>
+  EMAIL_USER_NAME: <email_account_username>
+  EMAIL_USER_PASSWORD: <email_account_password>
   EMAIL_FREQUENCY_IN_HOURS: 24h
   REPORT_TIME_ZONE: Australia/Sydney
   REDIS_HOST: redis-broker.local.pcfdev.io
